@@ -1,14 +1,15 @@
 import logging
+import os
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 
-# 日志设置
+# 日志配置
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
-# /start 命令处理
+# 处理 /start 命令
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         logging.info("收到 /start 命令")
@@ -18,7 +19,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"/start 处理失败: {e}")
 
-# 消息处理
+# 处理普通消息
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         text = update.message.text.strip()
@@ -44,31 +45,34 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await update.message.reply_text(reply)
         else:
-            # 兜底回复
             await update.message.reply_text(f"收到未处理的消息：{text}")
-
     except Exception as e:
         logging.error(f"处理消息时出错: {e}")
         await update.message.reply_text("⚠️ 出现错误，稍后再试或联系管理员")
 
-# 主程序入口
+# 主函数入口
 if __name__ == '__main__':
-    import os
     import asyncio
 
-    TOKEN = os.getenv("BOT_TOKEN") or "你的bot token"
+    TOKEN = os.getenv("BOT_TOKEN") or "8123986506:AAH6nmhU5J8Lm0M306sISf8GHwdERRpDpLA"
+    PORT = int(os.environ.get("PORT", "10000"))  # Render 默认绑定到 10000 端口
     WEBHOOK_URL = f"https://telegram-bot-28w5.onrender.com/{TOKEN}"
 
     app = ApplicationBuilder().token(TOKEN).build()
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     async def main():
+        await app.initialize()
         await app.bot.set_webhook(WEBHOOK_URL)
         logging.info(f"设置 webhook 到：{WEBHOOK_URL}")
         await app.start()
-        await app.updater.start_polling()
+        await app.updater.start_webhook(
+            listen="0.0.0.0",
+            port=PORT,
+            url_path=TOKEN,
+            webhook_url=WEBHOOK_URL,
+        )
         await app.updater.idle()
 
     asyncio.run(main())
