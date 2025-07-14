@@ -3,21 +3,35 @@ import logging
 import asyncio
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
-    ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
 )
 from aiohttp import web
 
-# === 环境变量 ===
-BOT_TOKEN = os.environ["BOT_TOKEN"]
-HOST = os.environ.get("HOST", "your-render-url.onrender.com")
-PORT = int(os.environ.get("PORT", 10000))
+# ==== 环境变量配置 ====
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+HOST = os.getenv("HOST")  # 你的 Render 子域名，例如 telegram-bot-28w5.onrender.com
+PORT = int(os.getenv("PORT", "10000"))
 
-# === 图片 file_id ===
+if not BOT_TOKEN or not HOST:
+    raise RuntimeError("请确保环境变量 BOT_TOKEN 和 HOST 已设置")
+
+# ==== 日志配置 ====
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+# ==== 图片 file_id ====
 WELCOME_IMG_ID = 'AgACAgUAAxkBAAO8aHPb9LaHZMmcavjuu6EXFHU-qogAAizGMRsZdaFXgCu7IDiL-lgBAAMCAAN5AAM2BA'
 CARD_IMG_ID = 'AgACAgUAAxkBAAO_aHPcnUS1CHeXx8e-9rlb7SP-3XIAAi7GMRsZdaFX_JzJmMhQjMMBAAMCAAN4AAM2BA'
 CUSTOMER_IMG_ID = 'AgACAgUAAxkBAAO-aHPch23_KXidl0oO_9bB5GbKtP4AAi3GMRsZdaFXyh1ozndYFOEBAAMCAAN4AAM2BA'
 
-# === 产品价格设置 ===
+# ==== 产品价格 ====
 PRODUCTS = {
     "油卡": 830,
     "电信卡": 88,
@@ -25,14 +39,8 @@ PRODUCTS = {
 }
 USDT_RATE = 7.15
 
-# === 日志设置 ===
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
 
-# === /start 指令 ===
+# ==== /start 命令处理函数 ====
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         name = update.effective_user.first_name or "朋友"
@@ -60,7 +68,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error(f"/start 出错: {e}", exc_info=True)
         await update.message.reply_text("🤖 系统异常，请稍后再试")
 
-# === 消息处理 ===
+
+# ==== 普通消息处理函数 ====
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         text = update.message.text.strip()
@@ -68,24 +77,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if text.startswith("🛒"):
             parts = text.replace("🛒", "").replace("张", "").split("*")
+            if len(parts) != 2:
+                await update.message.reply_text("格式错误，请使用菜单按钮下单")
+                return
             card_type = parts[0].strip()
             quantity = int(parts[1].strip())
             price = PRODUCTS.get(card_type)
-            if price:
-                total = price * quantity
-                usdt = round(total / USDT_RATE)
-                caption = (
-                    f"单价：{price}元/张\n数量：{quantity}张\n总价：{total}元\n"
-                    f"折合：{usdt} USDT\n优惠：无\n"
-                    "💼 收款地址(USDT-TRC20)：\n\n"
-                    "THTXffejAMtqzYKW6Sxfmq8BXXz9yEHYCQ\n\n"
-                    "👆 点击复制钱包, 地址尾号 EHYCQ 👆\n\n"
-                    "- 提币后请点击“提取卡密”按钮获取卡密"
-                )
-                await update.message.reply_photo(photo=CARD_IMG_ID, caption=caption, parse_mode="Markdown")
-            else:
+            if price is None:
                 await update.message.reply_text("商品不存在，请联系客服")
-
+                return
+            total = price * quantity
+            usdt = round(total / USDT_RATE)
+            caption = (
+                f"单价：{price}元/张\n数量：{quantity}张\n总价：{total}元\n"
+                f"折合：{usdt} USDT\n优惠：无\n"
+                "💼 收款地址(USDT-TRC20)：\n\n"
+                "THTXffejAMtqzYKW6Sxfmq8BXXz9yEHYCQ\n\n"
+                "👆 点击复制钱包, 地址尾号 EHYCQ 👆\n\n"
+                "- 提币后请点击“提取卡密”按钮获取卡密"
+            )
+            await update.message.reply_photo(photo=CARD_IMG_ID, caption=caption, parse_mode="Markdown")
         elif text == "💬 在线客服":
             await update.message.reply_photo(photo=CUSTOMER_IMG_ID, caption="👩‍💻 联系客服 @CCXR2025")
         elif text == "📦 提取卡密":
@@ -97,29 +108,35 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error(f"消息处理失败: {e}", exc_info=True)
         await update.message.reply_text("🤖 操作失败，请联系客服")
 
-# === 错误处理器 ===
-def setup_error_logging(app):
-    async def error_handler(update, context):
-        logger.error(f"未捕获异常: {context.error}", exc_info=True)
-        if update and update.message:
-            await update.message.reply_text("⚠️ 系统故障，请稍后再试")
-    app.add_error_handler(error_handler)
 
-# === Webhook 主程序 ===
+# ==== 错误处理函数 ====
+async def error_handler(update: Update, context):
+    logger.error(f"未捕获异常: {context.error}", exc_info=True)
+    if update and update.message:
+        await update.message.reply_text("⚠️ 系统故障，请稍后再试")
+
+
+# ==== 主函数启动 webhook ====
 async def main():
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    setup_error_logging(app)
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_error_handler(error_handler)
 
     webhook_url = f"https://{HOST}/{BOT_TOKEN}"
-    await app.bot.set_webhook(webhook_url)
+    await application.bot.set_webhook(webhook_url)
     logger.info(f"Webhook 设置成功：{webhook_url}")
 
+    # aiohttp 服务
     async def handle(request):
-        update_data = await request.json()
-        await app.update_queue.put(Update.de_json(update_data, app.bot))
-        return web.Response(text="ok")
+        try:
+            update_data = await request.json()
+            await application.update_queue.put(Update.de_json(update_data, application.bot))
+            return web.Response(text="ok")
+        except Exception as e:
+            logger.error(f"Webhook 处理请求异常: {e}", exc_info=True)
+            return web.Response(status=500, text="error")
 
     aio_app = web.Application()
     aio_app.router.add_post(f"/{BOT_TOKEN}", handle)
@@ -131,7 +148,15 @@ async def main():
     await site.start()
 
     logger.info(f"Bot 已上线，监听端口: {PORT}")
+
+    # 关键：启动 PTB 消费队列的后台任务
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()  # **此处非常关键，否则 update_queue 无人消费**
+
+    # 持续等待，防止程序退出
     await asyncio.Event().wait()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(main())
