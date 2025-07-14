@@ -7,3 +7,7 @@ services:
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
+      - key: HOST
+        value: telegram-oil-bot.onrender.com
+      - key: PORT
+        sync: false  # 由 Render 自动绑定
