@@ -22,12 +22,21 @@ logging.basicConfig(
 )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("机器人已启动，欢迎使用！")
+    try:
+        await update.message.reply_text("机器人已启动，欢迎使用！")
+        logging.info(f"向用户{update.effective_user.id}发送欢迎消息成功")
+    except Exception as e:
+        logging.error(f"发送欢迎消息异常: {e}")
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    logging.info(f"收到消息：{text}，来自用户：{update.effective_user.id}")
-    await update.message.reply_text("收到你的消息啦！")
+    user_id = update.effective_user.id
+    logging.info(f"收到消息：'{text}'，来自用户：{user_id}")
+    try:
+        await update.message.reply_text("收到你的消息啦！")
+        logging.info(f"成功回复用户{user_id}")
+    except Exception as e:
+        logging.error(f"回复消息异常: {e}")
 
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -39,11 +48,16 @@ async def main():
     await app.bot.set_webhook(webhook_url)
 
     async def handle(request):
-        update_data = await request.json()
-        logging.info(f"收到请求数据: {update_data}")
-        update = Update.de_json(update_data, app.bot)
-        await app.update_queue.put(update)
-        return web.Response()
+        try:
+            update_data = await request.json()
+            logging.info(f"收到请求数据: {update_data}")
+            update = Update.de_json(update_data, app.bot)
+            await app.update_queue.put(update)
+            logging.info("更新放入队列成功")
+            return web.Response()
+        except Exception as e:
+            logging.error(f"Webhook 处理失败: {e}")
+            return web.Response(status=500, text="Internal Server Error")
 
     aio_app = web.Application()
     aio_app.router.add_post(f'/{BOT_TOKEN}', handle)
