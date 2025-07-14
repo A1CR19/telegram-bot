@@ -47,17 +47,16 @@ async def main():
     logging.info(f"设置 webhook 到：{webhook_url}")
     await app.bot.set_webhook(webhook_url)
 
+    # 初始化和启动app，启动内部任务队列
+    await app.initialize()
+    await app.start()
+
     async def handle(request):
-        try:
-            update_data = await request.json()
-            logging.info(f"收到请求数据: {update_data}")
-            update = Update.de_json(update_data, app.bot)
-            await app.update_queue.put(update)
-            logging.info("更新放入队列成功")
-            return web.Response()
-        except Exception as e:
-            logging.error(f"Webhook 处理失败: {e}")
-            return web.Response(status=500, text="Internal Server Error")
+        update_data = await request.json()
+        logging.info(f"收到请求数据: {update_data}")
+        update = Update.de_json(update_data, app.bot)
+        await app.update_queue.put(update)
+        return web.Response()
 
     aio_app = web.Application()
     aio_app.router.add_post(f'/{BOT_TOKEN}', handle)
@@ -70,5 +69,7 @@ async def main():
     logging.info(f"Webhook 正在监听端口 {PORT}")
     await asyncio.Event().wait()
 
-if __name__ == '__main__':
-    asyncio.run(main())
+    # 结束时关闭
+    await app.stop()
+    await app.shutdown()
+
