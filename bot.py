@@ -1,35 +1,41 @@
-import logging
 import os
-import nest_asyncio
+import logging
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
+import nest_asyncio
+import asyncio
 
-nest_asyncio.apply()
+# 日志配置
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
-# Bot 设置
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8053714790:AAGjDeDLUtueXDkeJiYeiY9kvC5nzhjuLzY")
-PORT = int(os.environ.get('PORT', 8443))  # Render 提供的端口
-WEBHOOK_URL = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{BOT_TOKEN}"
+# 从环境变量读取
+BOT_TOKEN = os.environ["BOT_TOKEN"]
+HOST = os.environ.get("HOST", "telegram-bot-xxxx.onrender.com")  # 请设置 Render 上的 HOST 环境变量！
 
-# 日志
-logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
-
-# 图片ID
+# 示例图片 file_id
 WELCOME_IMG_ID = 'AgACAgUAAxkBAAO8aHPb9LaHZMmcavjuu6EXFHU-qogAAizGMRsZdaFXgCu7IDiL-lgBAAMCAAN5AAM2BA'
 CARD_100_IMG_ID = 'AgACAgUAAxkBAAO_aHPcnUS1CHeXx8e-9rlb7SP-3XIAAi7GMRsZdaFX_JzJmMhQjMMBAAMCAAN4AAM2BA'
-CARD_300_IMG_ID = CARD_100_IMG_ID
-ORDER_IMG_ID = CARD_100_IMG_ID
+CARD_300_IMG_ID = 'AgACAgUAAxkBAAO_aHPcnUS1CHeXx8e-9rlb7SP-3XIAAi7GMRsZdaFX_JzJmMhQjMMBAAMCAAN4AAM2BA'
+ORDER_IMG_ID = 'AgACAgUAAxkBAAO_aHPcnUS1CHeXx8e-9rlb7SP-3XIAAi7GMRsZdaFX_JzJmMhQjMMBAAMCAAN4AAM2BA'
 CUSTOMER_IMG_ID = 'AgACAgUAAxkBAAO-aHPch23_KXidl0oO_9bB5GbKtP4AAi3GMRsZdaFXyh1ozndYFOEBAAMCAAN4AAM2BA'
 
 # /start 命令
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    name = update.message.from_user.first_name or "朋友"
+    name = update.effective_user.first_name or "朋友"
     keyboard = [
         ["🛒 购买油卡 *1 张", "🛒 购买油卡 *3 张"],
         ["📦 查看订单", "💬 联系客服"]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-
     caption = (
         f"👏 欢迎 {name} 加入【🅜 石化卡商自助下单系统】\n\n"
         "⚠️ 请确保您的 Telegram 是从 [telegram.org](https://telegram.org) 官网下载\n"
@@ -46,10 +52,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-# 文本处理
+# 消息响应
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-
     if text == "🛒 购买油卡 *1 张":
         await update.message.reply_photo(
             photo=CARD_100_IMG_ID,
@@ -77,21 +82,24 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("请点击下方菜单按钮选择服务 👇")
 
-
-# 初始化程序
+# 主函数
 async def main():
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    logging.info(f"🎯 设置 webhook 到：{WEBHOOK_URL}")
-    await app.run_webhook(
+    webhook_url = f"https://{HOST}/{BOT_TOKEN}"
+    logging.info(f"🎯 设置 webhook 到：{webhook_url}")
+
+    await application.run_webhook(
         listen="0.0.0.0",
-        port=PORT,
-        webhook_url=WEBHOOK_URL
+        port=int(os.environ.get("PORT", 8443)),
+        webhook_url=webhook_url,
+        path=f"/{BOT_TOKEN}"
     )
 
-if __name__ == "__main__":
-    import asyncio
+# 启动入口
+if __name__ == '__main__':
+    nest_asyncio.apply()
     asyncio.run(main())
