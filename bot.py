@@ -28,7 +28,8 @@ button_texts = [
 ]
 WELCOME_IMG_ID = "AgACAgUAAxkBAANPaHUn1r5m5oB_JIbQigdPXJhwmxYAAiTHMRsZdalXJuST3sL6uMcBAAMCAAN5AAM2BA"
 CARD_IMG_ID = "AgACAgUAAxkBAANRaHUoObVyzozfIUFl2TtEhb-fVK0AAiXHMRsZdalXvBdO3ULb5MoBAAMCAAN4AAM2BA"
-CUSTOMER_IMG_ID = "AgACAgUAAxkBAAO-aHPch23_KXidl0oO_9bB5GbKtP4AAi3GMRsZdaFXyh1ozndYFOEBAAMCAAN4AAM2BA"
+CUSTOMER_IMG_ID = "AgACAgUAAxkBAANSaHUoT5PQQ0us-ioKGBpqUtGj7A8AAibHMRsZdalXZEXuLH22sDcBAAMCAAN4AAM2BA"
+TQKM_IMG_ID = "AgACAgUAAxkBAANTaHUoXVb5SzcW2aNNucWxXnXnsAkAAlzEMRtYPalXFQ8O3LdPINYBAAMCAAN4AAM2BA"
 
 PRODUCTS = {
     "油卡": 830,
@@ -96,7 +97,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif text == "💬 在线客服":
             await update.message.reply_photo(photo=CUSTOMER_IMG_ID, caption="👩‍💻 联系客服 @CCXR2025")
         elif text == "📦 提取卡密":
-            await update.message.reply_photo(photo=CUSTOMER_IMG_ID, caption="请发送交易截图，我们会在1~5分钟内回复您")
+            caption = (
+                "✅ 请向我发送您的交易截图进行审核\n"
+                "🌐 预计时长 1~5 分钟，重复提交无效\n"
+                "🗣 审核通过后，Bot 会通知您\n"
+                "⏳ 请耐心等待...…"
+            )
+            await update.message.reply_photo(photo=CUSTOMER_IMG_ID, caption=caption)
         else:
             await update.message.reply_text("📌 请点击下方菜单按钮选择服务 👇")
     except Exception as e:
