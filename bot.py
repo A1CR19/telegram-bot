@@ -47,19 +47,46 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("🤖 系统异常，请稍后再试")
 
+# 替换 main 函数部分
+
 async def main():
-    app = ApplicationBuilder().token(BOT_TOKEN).webhook(
-        listen=HOST,
-        port=PORT,
-        url_path=BOT_TOKEN,
-        webhook_url=f"{URL}/{BOT_TOKEN}"
-    ).build()
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_error_handler(error_handler)
 
-    logging.info("Bot 已上线，监听端口: %s", PORT)
-    await app.run_webhook()
+    webhook_url = f"https://{HOST}/{BOT_TOKEN}"
+    await application.bot.set_webhook(webhook_url)
+    logger.info(f"Webhook 设置成功：{webhook_url}")
+
+    # aiohttp 接收 Telegram 推送
+    async def handle(request):
+        try:
+            data = await request.json()
+            update = Update.de_json(data, application.bot)
+            await application.update_queue.put(update)
+            return web.Response(text="ok")
+        except Exception as e:
+            logger.error(f"Webhook 请求处理失败: {e}\n{traceback.format_exc()}")
+            return web.Response(status=500, text="error")
+
+    # aiohttp 服务设置
+    aio_app = web.Application()
+    aio_app.router.add_post(f"/{BOT_TOKEN}", handle)
+    aio_app.router.add_get("/health", lambda request: web.Response(text="Bot 正常运行"))
+
+    runner = web.AppRunner(aio_app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", PORT)
+    await site.start()
+
+    logger.info(f"✅ Bot 启动完成，监听 {PORT} 端口，等待 Telegram 请求")
+
+    await application.initialize()
+    await application.start()
+    await asyncio.Event().wait()  # 永远不退出
+
 
 if __name__ == '__main__':
     import asyncio
