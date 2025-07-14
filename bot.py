@@ -62,17 +62,16 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    async def main():
+        async def main():
         await app.initialize()
         await app.bot.set_webhook(WEBHOOK_URL)
         logging.info(f"设置 webhook 到：{WEBHOOK_URL}")
-        await app.start()
-        await app.updater.start_webhook(
+        await app.run_webhook(
             listen="0.0.0.0",
             port=PORT,
             url_path=TOKEN,
             webhook_url=WEBHOOK_URL,
         )
-        await app.updater.idle()
+
 
     asyncio.run(main())
