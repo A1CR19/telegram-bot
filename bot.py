@@ -21,9 +21,10 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-WELCOME_IMG_ID = 'AgACAgUAAxkBAAO8aHPb9LaHZMmcavjuu6EXFHU-qogAAizGMRsZdaFXgCu7IDiL-lgBAAMCAAN5AAM2BA'
-CARD_IMG_ID = 'AgACAgUAAxkBAAO_aHPcnUS1CHeXx8e-9rlb7SP-3XIAAi7GMRsZdaFX_JzJmMhQjMMBAAMCAAN4AAM2BA'
-CUSTOMER_IMG_ID = 'AgACAgUAAxkBAAO-aHPch23_KXidl0oO_9bB5GbKtP4AAi3GMRsZdaFXyh1ozndYFOEBAAMCAAN4AAM2BA'
+WELCOME_IMG_ID = 'AgACAgUAAxkBAAIBUGh0y55xlUF2ZOtfQWCqfrYLkPxAAAKkwzEb2A-oV9o2cdjw8AABjQEAAwIAA3kAAzYE'
+CARD_IMG_ID    = 'AgACAgUAAxkBAAIBUWh0y6tuD5xFARfsvqmpSvvT2XWaAAKlwzEb2A-oV8ekyaeITog4AQADAgADeAADNgQ'
+ORDER_IMG_ID   = 'AgACAgUAAxkBAAIBUmh0y7sWksHtM2J14K1sxyVvQ3LxAALJxzEbGXWhV98_2_ux2OlTAQADAgADeAADNgQ'
+CUSTOMER_IMG_ID= 'AgACAgUAAxkBAAIBU2h0y81tRjBAc1xjygz2ase5ZZr4AAKmwzEb2A-oV9fiw7wCJ6moAQADAgADeAADNgQ'
 
 PRODUCTS = {
     "油卡": 830,
@@ -34,29 +35,35 @@ PRODUCTS = {
 USDT_RATE = 7.15
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    name = update.effective_user.first_name or "朋友"
-    keyboard = [
-        ["🛒 油卡 *1 张", "🛒 油卡 *3 张", "🛒 油卡 *5 张"],
-        ["🛒 油卡 *10张", "🛒 油卡 *20张", "🛒 油卡 *30张"],
-        ["🛒 电信卡 *1 张", "🛒 电信卡 *10 张", "🛒 电信卡 *30 张"],
-        ["🛒 电信卡 *50 张", "🛒 电信卡 *100 张", "🛒 电信卡 *200 张"],
-        ["🛒 京东E卡 *1 张", "🛒 京东E卡 *3 张", "🛒 京东E卡 *5 张"],
-        ["🛒 京东E卡 *10张", "📦 提取卡密", "💬 在线客服"]
-    ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    caption = (
-        f"👏 欢迎 {name} 加入【🅜 石化卡商自助下单系统】\n\n"
-        "使用自助提卡系统请确保您的telegram是从AppStore或者官网下载!\n【 https://telegram.org/ 】\n"
-        "网络上下载的中文版telegram是有病毒的,会自动替换您收到的地址\n\n"
-        "由于系统是自动生成地址,无法上传地址的二维码图片供您核对\n\n"
-        "THTXffejAMtqzYKW6Sxfmq8BXXz9yEHYCQ\n\n"
-        "【THTXffej……z9yEHYCQ】请核对前后八位数字和字母\n\n"
-        "⚠️上述地址前5位为THTXf后5位为 EHYCQ\n如不一致则意味着您使用了盗版客户端，请停止充值\n\n"
-        "同时谨防人为上传带图片地址的系统,本系统从未对外授权\n\n"
-        "💬 如不确定,切勿提币,请联系在线客服核验! "
-    )
-    await update.message.reply_photo(photo=WELCOME_IMG_ID, caption=caption, parse_mode="Markdown", reply_markup=reply_markup)
+    try:
+        name = update.effective_user.first_name or "朋友"
+        keyboard = [
+            ["🛒 油卡 *1 张", "🛒 油卡 *3 张", "🛒 油卡 *5 张"],
+            ["🛒 油卡 *10张", "🛒 油卡 *20张", "🛒 油卡 *30张"],
+            ["🛒 电信卡 *1 张", "🛒 电信卡 *10 张", "🛒 电信卡 *30 张"],
+            ["🛒 电信卡 *50 张", "🛒 电信卡 *100 张", "🛒 电信卡 *200 张"],
+            ["🛒 京东E卡 *1 张", "🛒 京东E卡 *3 张", "🛒 京东E卡 *5 张"],
+            ["🛒 京东E卡 *10张", "📦 提取卡密", "💬 在线客服"]
+        ]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        caption = (
+            f"👏 欢迎 {name} 加入【🅜 石化卡商自助下单系统】\n\n"
+            "使用自助提卡系统请确保您的telegram是从AppStore或者官网下载!\n【 https://telegram.org/ 】\n"
+            "网络上下载的中文版telegram是有病毒的,会自动替换您收到的地址\n\n"
+            "由于系统是自动生成地址,无法上传地址的二维码图片供您核对\n\n"
+            "THTXffejAMtqzYKW6Sxfmq8BXXz9yEHYCQ\n\n"
+            "【THTXffej……z9yEHYCQ】请核对前后八位数字和字母\n\n"
+            "⚠️上述地址前5位为THTXf后5位为 EHYCQ\n如不一致则意味着您使用了盗版客户端，请停止充值\n\n"
+            "同时谨防人为上传带图片地址的系统,本系统从未对外授权\n\n"
+            "💬 如不确定,切勿提币,请联系在线客服核验! "
+        )
 
+        logging.info("正在发送欢迎图片")
+        await update.message.reply_photo(photo=WELCOME_IMG_ID, caption=caption, parse_mode="Markdown", reply_markup=reply_markup)
+        logging.info("发送完成")
+
+    except Exception as e:
+        logging.error(f"/start 处理失败: {e}")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
