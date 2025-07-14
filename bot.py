@@ -1,11 +1,10 @@
 import os
 import logging
-import asyncio
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 TOKEN = os.environ.get("BOT_TOKEN", "你的TOKEN")
-PORT = int(os.environ.get("PORT", "10000"))
+PORT = int(os.environ.get("PORT", 10000))
 WEBHOOK_URL = f"https://你的子域名.onrender.com/{TOKEN}"
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -26,17 +25,12 @@ async def button_handler(update, context):
     elif query.data == "buy_3":
         await query.edit_message_text("您选择了购买 3 张油卡，马上为您处理...")
 
-async def main():
-    from telegram.ext import Application
-    application = Application.builder().token(TOKEN).build()
+def main():
+    application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(button_handler))
 
-    await application.initialize()
-    await application.bot.set_webhook(WEBHOOK_URL)
-    logging.info(f"设置 webhook 到：{WEBHOOK_URL}")
-
-    await application.run_webhook(
+    application.run_webhook(
         listen="0.0.0.0",
         port=PORT,
         url_path=TOKEN,
@@ -44,4 +38,4 @@ async def main():
     )
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()
