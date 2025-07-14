@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)  # ✅ 加上这行
 button_texts = [
     ["购买卡类商品", "联系客服"]
 ]
+WELCOME_IMG_ID = "AgACAgUAAxkBAANPaHUn1r5m5oB_JIbQigdPXJhwmxYAAiTHMRsZdalXJuST3sL6uMcBAAMCAAN5AAM2BA"
+CARD_IMG_ID = "AgACAgUAAxkBAANRaHUoObVyzozfIUFl2TtEhb-fVK0AAiXHMRsZdalXvBdO3ULb5MoBAAMCAAN4AAM2BA"
+CUSTOMER_IMG_ID = "AgACAgUAAxkBAAO-aHPch23_KXidl0oO_9bB5GbKtP4AAi3GMRsZdaFXyh1ozndYFOEBAAMCAAN4AAM2BA"
 
 keyboard = ReplyKeyboardMarkup(
     [[KeyboardButton(text) for text in row] for row in button_texts], resize_keyboard=True
@@ -34,7 +37,7 @@ keyboard = ReplyKeyboardMarkup(
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = "欢迎使用自助系统，请选择以下操作："
     await update.message.reply_photo(
-        photo="AgACAgUAAxkBAAMJaHPV1eyQ8z_fVK7Yt3k85VxNgTEAAizGMRsZdaFXfuNLuN-INr8BAAMCAAN5AAM2BA",
+        photo=WELCOME_IMG_ID,
         caption=welcome_text,
         reply_markup=keyboard
     )
@@ -44,7 +47,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user_text == "购买卡类商品":
         await update.message.reply_photo(
-            photo="AgACAgUAAxkBAAMKaHPV8I7h3xAl2HiT5-KytQJXhwADLcYxGxl1oVcJZsMDFqMUAQEAAwIAA3gAAzYE",
+            photo=CARD_IMG_ID,
             caption="🔥 特价商品：Netflix 会员卡，仅需 5 USDT",
         )
     elif user_text == "联系客服":
