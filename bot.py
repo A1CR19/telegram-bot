@@ -21,9 +21,9 @@ logging.basicConfig(
 )
 
 # 图片 file_id
-WELCOME_IMG_ID = 'AgACAgUAAxkBAAO8aHPb9LaHZMmcavjuu6EXFHU-qogAAizGMRsZdaFXgCu7IDiL-lgBAAMCAAN5AAM2BA'
-CARD_IMG_ID = 'AgACAgUAAxkBAAO_aHPcnUS1CHeXx8e-9rlb7SP-3XIAAi7GMRsZdaFX_JzJmMhQjMMBAAMCAAN4AAM2BA'
-CUSTOMER_IMG_ID = 'AgACAgUAAxkBAAO-aHPch23_KXidl0oO_9bB5GbKtP4AAi3GMRsZdaFXyh1ozndYFOEBAAMCAAN4AAM2BA'
+WELCOME_IMG_ID = 'AgACAgUAAxkBAAMJaHPV1eyQ8z_fVK7Yt3k85VxNgTEAAizGMRsZdaFXfuNLuN-INr8BAAMCAAN5AAM2BA'
+CARD_IMG_ID = 'AgACAgUAAxkBAAMKaHPV8I7h3xAl2HiT5-KytQJXhwADLcYxGxl1oVcJZsMDFqMUAQEAAwIAA3gAAzYE'
+CUSTOMER_IMG_ID = 'AgACAgUAAxkBAAMLaHPWCFoVFapOwi94fJRCz4B6ycQAAi7GMRsZdaFXEVNSbNcRChIBAAMCAAN4AAM2BA'
 
 keyboard = [
     ["🛒 油卡 *1 张", "🛒 油卡 *3 张", "🛒 油卡 *5 张"],
@@ -55,6 +55,7 @@ def parse_order(text):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     name = user.first_name or "用户"
+    logging.info(f"触发 /start，欢迎用户：{name} ({user.id})")
     caption = (
         f"👏 欢迎 {name} 加入【🅜 石化卡商自助下单系统】\n\n"
         "使用自助提卡系统请确保您的telegram是从AppStore或者官网下载!\n【 https://telegram.org/ 】\n"
@@ -64,12 +65,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "⚠️ 请核对地址：前5位 `THTXf`，后5位 `EHYCQ`\n\n"
         "如不一致则您使用了盗版客户端，请停止充值！"
     )
-    await update.message.reply_photo(
-        photo=WELCOME_IMG_ID,
-        caption=caption,
-        reply_markup=reply_markup,
-        parse_mode="MarkdownV2"
-    )
+    try:
+        await update.message.reply_photo(
+            photo=WELCOME_IMG_ID,
+            caption=caption,
+            reply_markup=reply_markup,
+            parse_mode="MarkdownV2"
+        )
+        logging.info("欢迎消息发送成功")
+    except Exception as e:
+        logging.error(f"发送欢迎消息异常: {e}")
+
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
