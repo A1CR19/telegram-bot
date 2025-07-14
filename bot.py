@@ -128,17 +128,22 @@ async def main():
     application.add_error_handler(error_handler)
 
     webhook_url = f"https://{HOST}/{BOT_TOKEN}"
-    await application.bot.set_webhook(webhook_url)
-    logger.info(f"Webhook 设置成功：{webhook_url}")
 
-    # aiohttp 服务
+    # 只在第一次运行时设置 webhook，后续启动直接跳过
+    try:
+        await application.bot.set_webhook(webhook_url)
+        logger.info(f"Webhook 设置成功：{webhook_url}")
+    except Exception as e:
+        logger.warning(f"设置 webhook 时出错（可能是重复设置）: {e}")
+
+    # aiohttp 服务处理
     async def handle(request):
         try:
             update_data = await request.json()
             await application.update_queue.put(Update.de_json(update_data, application.bot))
             return web.Response(text="ok")
         except Exception as e:
-            logger.error(f"Webhook 处理请求异常: {e}\n{traceback.format_exc()}")
+            logger.error(f"Webhook 处理请求异常: {e}")
             return web.Response(status=500, text="error")
 
     aio_app = web.Application()
@@ -152,10 +157,9 @@ async def main():
 
     logger.info(f"Bot 已上线，监听端口: {PORT}")
 
-    # 关键：启动 PTB 消费队列的后台任务
+    # 启动 webhook 监听
     await application.initialize()
     await application.start()
-    # 这里改为 start_polling 或 start_webhook，webhook用的是下面这一句：
     await application.updater.start_webhook(
         listen="0.0.0.0",
         port=PORT,
@@ -163,9 +167,4 @@ async def main():
         webhook_url=webhook_url,
     )
 
-    # 持续等待，防止程序退出
     await asyncio.Event().wait()
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
