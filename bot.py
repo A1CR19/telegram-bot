@@ -8,7 +8,6 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
-import nest_asyncio
 import asyncio
 
 # 日志配置
@@ -17,18 +16,15 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# 从环境变量读取
 BOT_TOKEN = os.environ["BOT_TOKEN"]
-HOST = os.environ.get("HOST", "telegram-bot-xxxx.onrender.com")  # 请设置 Render 上的 HOST 环境变量！
+HOST = os.environ.get("HOST", "telegram-bot-xxxx.onrender.com")
 
-# 示例图片 file_id
 WELCOME_IMG_ID = 'AgACAgUAAxkBAAO8aHPb9LaHZMmcavjuu6EXFHU-qogAAizGMRsZdaFXgCu7IDiL-lgBAAMCAAN5AAM2BA'
 CARD_100_IMG_ID = 'AgACAgUAAxkBAAO_aHPcnUS1CHeXx8e-9rlb7SP-3XIAAi7GMRsZdaFX_JzJmMhQjMMBAAMCAAN4AAM2BA'
 CARD_300_IMG_ID = 'AgACAgUAAxkBAAO_aHPcnUS1CHeXx8e-9rlb7SP-3XIAAi7GMRsZdaFX_JzJmMhQjMMBAAMCAAN4AAM2BA'
 ORDER_IMG_ID = 'AgACAgUAAxkBAAO_aHPcnUS1CHeXx8e-9rlb7SP-3XIAAi7GMRsZdaFX_JzJmMhQjMMBAAMCAAN4AAM2BA'
 CUSTOMER_IMG_ID = 'AgACAgUAAxkBAAO-aHPch23_KXidl0oO_9bB5GbKtP4AAi3GMRsZdaFXyh1ozndYFOEBAAMCAAN4AAM2BA'
 
-# /start 命令
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name = update.effective_user.first_name or "朋友"
     keyboard = [
@@ -44,7 +40,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🧩 校验码：前5位 `THTXf` / 后5位 `EHYCQ`\n\n"
         "💬 请点击下方菜单按钮继续操作 👇"
     )
-
     await update.message.reply_photo(
         photo=WELCOME_IMG_ID,
         caption=caption,
@@ -52,7 +47,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-# 消息响应
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     if text == "🛒 购买油卡 *1 张":
@@ -82,7 +76,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("请点击下方菜单按钮选择服务 👇")
 
-# 主函数
 async def main():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
 
@@ -99,4 +92,6 @@ async def main():
     )
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.create_task(main())
+    loop.run_forever()
