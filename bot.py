@@ -13,7 +13,7 @@ from aiohttp import web
 
 # ==== 环境变量配置 ====
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-HOST = "telegram-bot-28w5.onrender.com"  # 你的 Render 子域名，例如 telegram-bot-28w5.onrender.com
+HOST = "telegram-bot-28w5.onrender.com"  # 你的 Render 子域名
 PORT = int(os.getenv("PORT", "10000"))
 
 if not BOT_TOKEN or not HOST:
@@ -110,7 +110,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ==== 错误处理函数 ====
-async def error_handler(update: Update, context):
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.error(f"未捕获异常: {context.error}", exc_info=True)
     if update and update.message:
         await update.message.reply_text("⚠️ 系统故障，请稍后再试")
@@ -126,20 +126,18 @@ async def main():
 
     webhook_url = f"https://{HOST}/{BOT_TOKEN}"
     await application.bot.set_webhook(webhook_url)
-    logger.info(f"✅ Webhook 设置成功：{webhook_url}")
+    logger.info(f"Webhook 设置成功：{webhook_url}")
 
-    # aiohttp 服务：处理 Telegram 推送过来的 POST 请求
+    # aiohttp 服务处理 Telegram 的 webhook 请求
     async def handle(request):
         try:
             update_data = await request.json()
-            update = Update.de_json(update_data, application.bot)
-            await application.update_queue.put(update)
+            await application.update_queue.put(Update.de_json(update_data, application.bot))
             return web.Response(text="ok")
         except Exception as e:
-            logger.error(f"❌ Webhook 请求处理异常: {e}", exc_info=True)
+            logger.error(f"Webhook 处理请求异常: {e}", exc_info=True)
             return web.Response(status=500, text="error")
 
-    # 启动 aiohttp 服务
     aio_app = web.Application()
     aio_app.router.add_post(f"/{BOT_TOKEN}", handle)
     aio_app.router.add_get("/health", lambda request: web.Response(text="Bot 正常运行"))
@@ -149,15 +147,15 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", PORT)
     await site.start()
 
-    logger.info(f"🚀 Bot 正在监听端口 {PORT}，等待 Telegram 消息...")
+    logger.info(f"Bot 已上线，监听端口: {PORT}")
 
-    # 启动 PTB 的后台处理流程
+    # 启动 PTB 应用（但不再使用 .start_webhook()）
     await application.initialize()
     await application.start()
 
-    # ❌ 不能再使用旧的 start_webhook()，因为我们用的是自定义 aiohttp webhook
-    # await application.updater.start_webhook()  ← 这一行要删除 ❗
-
-    # 持续等待防止退出
+    # 保持运行
     await asyncio.Event().wait()
 
+
+if __name__ == "__main__":
+    asyncio.run(main())
