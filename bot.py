@@ -1,35 +1,27 @@
-import os
-import asyncio
 import logging
+import os
 import nest_asyncio
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+
 nest_asyncio.apply()
 
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters,
-)
+# Bot 设置
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8053714790:AAGjDeDLUtueXDkeJiYeiY9kvC5nzhjuLzY")
+PORT = int(os.environ.get('PORT', 8443))  # Render 提供的端口
+WEBHOOK_URL = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{BOT_TOKEN}"
 
-# 从环境变量读取
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-PORT = int(os.environ.get("PORT", "8443"))
-HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+# 日志
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-
+# 图片ID
 WELCOME_IMG_ID = 'AgACAgUAAxkBAAO8aHPb9LaHZMmcavjuu6EXFHU-qogAAizGMRsZdaFXgCu7IDiL-lgBAAMCAAN5AAM2BA'
 CARD_100_IMG_ID = 'AgACAgUAAxkBAAO_aHPcnUS1CHeXx8e-9rlb7SP-3XIAAi7GMRsZdaFX_JzJmMhQjMMBAAMCAAN4AAM2BA'
 CARD_300_IMG_ID = CARD_100_IMG_ID
 ORDER_IMG_ID = CARD_100_IMG_ID
 CUSTOMER_IMG_ID = 'AgACAgUAAxkBAAO-aHPch23_KXidl0oO_9bB5GbKtP4AAi3GMRsZdaFXyh1ozndYFOEBAAMCAAN4AAM2BA'
 
-
+# /start 命令
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name = update.message.from_user.first_name or "朋友"
     keyboard = [
@@ -54,7 +46,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-
+# 文本处理
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
@@ -86,22 +78,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("请点击下方菜单按钮选择服务 👇")
 
 
+# 初始化程序
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
+    logging.info(f"🎯 设置 webhook 到：{WEBHOOK_URL}")
     await app.run_webhook(
         listen="0.0.0.0",
         port=PORT,
-        webhook_url=f"https://{HOST}/{BOT_TOKEN}",
-        allowed_updates=["message", "edited_message"],
+        webhook_url=WEBHOOK_URL
     )
 
-
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    if loop.is_running():
-        loop.create_task(main())
-    else:
-        loop.run_until_complete(main())
+    import asyncio
+    asyncio.run(main())
