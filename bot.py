@@ -27,8 +27,8 @@ CUSTOMER_IMG_ID = 'AgACAgUAAxkBAAO-aHPch23_KXidl0oO_9bB5GbKtP4AAi3GMRsZdaFXyh1oz
 
 PRODUCTS = {
     "油卡": 830,
-    "电信卡": 200,
-    "京东E卡": 320
+    "电信卡": 88,
+    "京东E卡": 815
 }
 
 USDT_RATE = 7.15
