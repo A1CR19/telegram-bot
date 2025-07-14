@@ -13,7 +13,7 @@ from aiohttp import web
 
 # ==== 环境变量配置 ====
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-HOST = os.getenv("HOST")  # 你的 Render 子域名，例如 telegram-bot-28w5.onrender.com
+HOST = "telegram-bot-28w5.onrender.com"  # 你的 Render 子域名，例如 telegram-bot-28w5.onrender.com
 PORT = int(os.getenv("PORT", "10000"))
 
 if not BOT_TOKEN or not HOST:
