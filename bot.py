@@ -126,13 +126,16 @@ async def main():
     app.add_handler(CommandHandler(["start", "开始"], start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    await app.initialize()   # 🔴 初始化应用
-    await app.start()        # 🔴 启动处理器
+    # 启动 bot 的处理器，初始化队列
+    await app.initialize()
+    await app.start()
 
+    # 设置 Webhook 地址
     webhook_url = f"https://{HOST}/{BOT_TOKEN}"
     logging.info(f"设置 webhook 到：{webhook_url}")
     await app.bot.set_webhook(webhook_url)
 
+    # aiohttp 创建 webhook 接口
     async def handle(request):
         update_data = await request.json()
         logging.info(f"收到请求数据: {update_data}")
@@ -148,5 +151,8 @@ async def main():
     await site.start()
 
     logging.info(f"✅ Webhook 正在监听端口 {PORT}")
+
+    # 阻止程序退出（阻塞）
     await asyncio.Event().wait()
+
 
