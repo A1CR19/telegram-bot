@@ -29,12 +29,16 @@ PRODUCTS = {
 USDT_RATE = 7.15
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logging.info(f"/start 触发，用户: {update.effective_user.id} {update.effective_user.username}")
+    user = update.effective_user
+    logging.info(f"/start 被触发，用户：{user.id} @{user.username}")
+
     try:
         await update.message.reply_text("机器人在线，欢迎使用！")
-        logging.info("发送了欢迎文本消息")
+        logging.info("发送欢迎文本消息成功")
+        await update.message.reply_text(f"你的用户名是：{user.username}，ID是：{user.id}")
     except Exception as e:
-        logging.error(f"发送欢迎消息失败: {e}")
+        logging.error(f"发送欢迎消息失败：{e}")
+
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info(f"收到消息：{update.message.text} 来自用户 {update.effective_user.id}")
