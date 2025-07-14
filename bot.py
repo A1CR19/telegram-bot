@@ -95,11 +95,8 @@ async def main():
     await application.run_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get("PORT", 8443)),
-        webhook_url=webhook_url,
-        path=f"/{BOT_TOKEN}"
+        webhook_url=webhook_url
     )
 
-# 启动入口
 if __name__ == '__main__':
-    nest_asyncio.apply()
     asyncio.run(main())
