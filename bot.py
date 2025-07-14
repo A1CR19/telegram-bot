@@ -1,8 +1,12 @@
 import os
 import logging
+import asyncio
+import traceback
+from aiohttp import web  
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, InputMediaPhoto
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 from dotenv import load_dotenv
+
 
 # Load environment variables
 load_dotenv()
