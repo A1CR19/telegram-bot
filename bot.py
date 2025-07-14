@@ -1,6 +1,7 @@
 import os
 import logging
 import asyncio
+import traceback
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
@@ -13,7 +14,7 @@ from aiohttp import web
 
 # ==== 环境变量配置 ====
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-HOST = os.getenv("HOST")  # 你的 Render 子域名，比如 telegram-bot-28w5.onrender.com
+HOST = "telegram-bot-28w5.onrender.com"  # 你的 Render 子域名，例如 telegram-bot-28w5.onrender.com
 PORT = int(os.getenv("PORT", "10000"))
 
 if not BOT_TOKEN or not HOST:
@@ -65,13 +66,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await update.message.reply_photo(photo=WELCOME_IMG_ID, caption=caption, parse_mode="Markdown", reply_markup=reply_markup)
     except Exception as e:
-        logger.error(f"/start 出错: {e}", exc_info=True)
+        logger.error(f"/start 出错: {e}\n{traceback.format_exc()}")
         await update.message.reply_text("🤖 系统异常，请稍后再试")
 
 
 # ==== 普通消息处理函数 ====
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
+        logger.info(f"收到消息内容: {update.message.text if update.message else '无消息对象'}")
+
         text = update.message.text.strip()
         logger.info(f"收到用户消息: {text}")
 
@@ -105,13 +108,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("📌 请点击下方菜单按钮选择服务 👇")
 
     except Exception as e:
-        logger.error(f"消息处理失败: {e}", exc_info=True)
+        logger.error(f"消息处理失败: {e}\n{traceback.format_exc()}")
         await update.message.reply_text("🤖 操作失败，请联系客服")
 
 
 # ==== 错误处理函数 ====
 async def error_handler(update: Update, context):
-    logger.error(f"未捕获异常: {context.error}", exc_info=True)
+    logger.error(f"未捕获异常: {context.error}\n{traceback.format_exc()}")
     if update and update.message:
         await update.message.reply_text("⚠️ 系统故障，请稍后再试")
 
@@ -128,15 +131,14 @@ async def main():
     await application.bot.set_webhook(webhook_url)
     logger.info(f"Webhook 设置成功：{webhook_url}")
 
-    # aiohttp 服务接收 webhook 更新
+    # aiohttp 服务
     async def handle(request):
         try:
             update_data = await request.json()
-            logger.info(f"Webhook 收到更新: {update_data}")  # 重要日志，确认接收
             await application.update_queue.put(Update.de_json(update_data, application.bot))
             return web.Response(text="ok")
         except Exception as e:
-            logger.error(f"Webhook 处理异常: {e}", exc_info=True)
+            logger.error(f"Webhook 处理请求异常: {e}\n{traceback.format_exc()}")
             return web.Response(status=500, text="error")
 
     aio_app = web.Application()
@@ -150,11 +152,18 @@ async def main():
 
     logger.info(f"Bot 已上线，监听端口: {PORT}")
 
-    # 初始化并启动应用（不调用 start_webhook，避免冲突）
+    # 关键：启动 PTB 消费队列的后台任务
     await application.initialize()
     await application.start()
+    # 这里改为 start_polling 或 start_webhook，webhook用的是下面这一句：
+    await application.updater.start_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path=BOT_TOKEN,
+        webhook_url=webhook_url,
+    )
 
-    # 持续运行防止退出
+    # 持续等待，防止程序退出
     await asyncio.Event().wait()
 
 
