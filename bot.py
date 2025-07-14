@@ -123,35 +123,30 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # 主函数
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler(["start", "开始"], start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # 设置 Webhook
+    await app.initialize()   # 🔴 初始化应用
+    await app.start()        # 🔴 启动处理器
+
     webhook_url = f"https://{HOST}/{BOT_TOKEN}"
-    logging.info(f"设置 Webhook 到：{webhook_url}")
+    logging.info(f"设置 webhook 到：{webhook_url}")
     await app.bot.set_webhook(webhook_url)
 
-    # aiohttp 处理请求
     async def handle(request):
-        try:
-            update_data = await request.json()
-            logging.info(f"收到请求数据: {update_data}")
-            update = Update.de_json(update_data, app.bot)
-            await app.update_queue.put(update)
-        except Exception as e:
-            logging.error(f"Webhook 处理失败: {e}")
+        update_data = await request.json()
+        logging.info(f"收到请求数据: {update_data}")
+        await app.update_queue.put(Update.de_json(update_data, app.bot))
         return web.Response()
 
     aio_app = web.Application()
-    aio_app.router.add_post(f"/{BOT_TOKEN}", handle)
+    aio_app.router.add_post(f'/{BOT_TOKEN}', handle)
 
     runner = web.AppRunner(aio_app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", PORT)
     await site.start()
 
-    logging.info(f"✅ Webhook 正在监听端口 {PORT} ...")
+    logging.info(f"✅ Webhook 正在监听端口 {PORT}")
     await asyncio.Event().wait()
 
-if __name__ == '__main__':
-    asyncio.run(main())
