@@ -12,24 +12,15 @@ from telegram.ext import (
 )
 from aiohttp import web
 
-# Telegram Bot Token 和 Render Webhook 设置
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 HOST = os.environ.get("HOST", "your-render-url.onrender.com")
 PORT = int(os.environ.get("PORT", 10000))
 
-# 日志设置
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 
-# ✅ 最新 file_id 设置
-WELCOME_IMG_ID = 'AgACAgUAAxkBAAIBUGh0y55xlUF2ZOtfQWCqfrYLkPxAAAKkwzEb2A-oV9o2cdjw8AABjQEAAwIAA3kAAzYE'
-CARD_IMG_ID    = 'AgACAgUAAxkBAAIBUWh0y6tuD5xFARfsvqmpSvvT2XWaAAKlwzEb2A-oV8ekyaeITog4AQADAgADeAADNgQ'
-ORDER_IMG_ID   = 'AgACAgUAAxkBAAIBUmh0y7sWksHtM2J14K1sxyVvQ3LxAALJxzEbGXWhV98_2_ux2OlTAQADAgADeAADNgQ'
-CUSTOMER_IMG_ID= 'AgACAgUAAxkBAAIBU2h0y81tRjBAc1xjygz2ase5ZZr4AAKmwzEb2A-oV9fiw7wCJ6moAQADAgADeAADNgQ'
-
-# 商品信息
 PRODUCTS = {
     "油卡": 830,
     "电信卡": 88,
@@ -38,12 +29,14 @@ PRODUCTS = {
 USDT_RATE = 7.15
 
 
-# 开始指令响应
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("机器人在线，欢迎使用！")
-    logging.info("发送了测试文本回复")
+    try:
+        await update.message.reply_text("机器人在线，欢迎使用！")
+        logging.info("发送了测试文本回复")
+    except Exception as e:
+        logging.error(f"发送测试文本回复失败: {e}")
 
-# 用户点击按钮的处理函数
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
     logging.info(f"收到消息文本: {text}")
@@ -71,7 +64,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "- 提币后请点击（提取卡密）按钮，Bot 会发送专属提卡密令！\n"
                     "- 激活成功后，Bot 会立刻发送您的卡号卡密。"
                 )
-                await update.message.reply_photo(photo=CARD_IMG_ID, caption=caption)
+                await update.message.reply_text(caption)
             else:
                 await update.message.reply_text("暂不支持该商品类型，请联系客服 @CCXR2025")
         except Exception as e:
@@ -79,27 +72,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("格式有误，请重新选择商品")
 
     elif text == "💬 在线客服":
-        await update.message.reply_photo(
-            photo=CUSTOMER_IMG_ID,
-            caption="👩‍💻 @CCXR2025 为您服务"
-        )
+        await update.message.reply_text("👩‍💻 @CCXR2025 为您服务")
 
     elif text == "📦 提取卡密":
-        await update.message.reply_photo(
-            photo=ORDER_IMG_ID,
-            caption=(
-                "✅ 请向我发送您的交易截图进行审核\n"
-                "🌐 预计时长 1~5 分钟，重复提交无效\n"
-                "🗣 审核通过后，Bot 会通知您\n"
-                "⏳ 请耐心等待……"
-            )
+        await update.message.reply_text(
+            "✅ 请向我发送您的交易截图进行审核\n"
+            "🌐 预计时长 1~5 分钟，重复提交无效\n"
+            "🗣 审核通过后，Bot 会通知您\n"
+            "⏳ 请耐心等待……"
         )
 
     else:
         await update.message.reply_text("请点击下方菜单按钮选择服务 👇")
 
 
-# 主函数：设置 webhook 与 aiohttp 服务器
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
