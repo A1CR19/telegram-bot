@@ -126,18 +126,20 @@ async def main():
 
     webhook_url = f"https://{HOST}/{BOT_TOKEN}"
     await application.bot.set_webhook(webhook_url)
-    logger.info(f"Webhook 设置成功：{webhook_url}")
+    logger.info(f"✅ Webhook 设置成功：{webhook_url}")
 
-    # aiohttp 服务
+    # aiohttp 服务：处理 Telegram 推送过来的 POST 请求
     async def handle(request):
         try:
             update_data = await request.json()
-            await application.update_queue.put(Update.de_json(update_data, application.bot))
+            update = Update.de_json(update_data, application.bot)
+            await application.update_queue.put(update)
             return web.Response(text="ok")
         except Exception as e:
-            logger.error(f"Webhook 处理请求异常: {e}", exc_info=True)
+            logger.error(f"❌ Webhook 请求处理异常: {e}", exc_info=True)
             return web.Response(status=500, text="error")
 
+    # 启动 aiohttp 服务
     aio_app = web.Application()
     aio_app.router.add_post(f"/{BOT_TOKEN}", handle)
     aio_app.router.add_get("/health", lambda request: web.Response(text="Bot 正常运行"))
@@ -147,16 +149,15 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", PORT)
     await site.start()
 
-    logger.info(f"Bot 已上线，监听端口: {PORT}")
+    logger.info(f"🚀 Bot 正在监听端口 {PORT}，等待 Telegram 消息...")
 
-    # 关键：启动 PTB 消费队列的后台任务
+    # 启动 PTB 的后台处理流程
     await application.initialize()
     await application.start()
-    await application.updater.start_webhook() # ✅ 使用 webhook 消费消息队列
 
-    # 持续等待，防止程序退出
+    # ❌ 不能再使用旧的 start_webhook()，因为我们用的是自定义 aiohttp webhook
+    # await application.updater.start_webhook()  ← 这一行要删除 ❗
+
+    # 持续等待防止退出
     await asyncio.Event().wait()
 
-
-if __name__ == "__main__":
-    asyncio.run(main())
