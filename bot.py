@@ -40,39 +40,8 @@ USDT_RATE = 7.15
 
 # 开始指令响应
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    name = update.effective_user.first_name or "朋友"
-
-    keyboard = [
-        ["🛒 油卡 *1 张", "🛒 油卡 *3 张", "🛒 油卡 *5 张"],
-        ["🛒 油卡 *10张", "🛒 油卡 *20张", "🛒 油卡 *30张"],
-        ["🛒 电信卡 *1 张", "🛒 电信卡 *10 张", "🛒 电信卡 *30 张"],
-        ["🛒 电信卡 *50 张", "🛒 电信卡 *100 张", "🛒 电信卡 *200 张"],
-        ["🛒 京东E卡 *1 张", "🛒 京东E卡 *3 张", "🛒 京东E卡 *5 张"],
-        ["🛒 京东E卡 *10张", "📦 提取卡密", "💬 在线客服"]
-    ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-
-    caption = (
-        f"👏 欢迎 {name} 加入【🅜 石化卡商自助下单系统】\n\n"
-        "使用自助提卡系统请确保您的telegram是从AppStore或者官网下载!\n【 https://telegram.org/ 】\n"
-        "网络上下载的中文版telegram是有病毒的,会自动替换您收到的地址\n\n"
-        "由于系统是自动生成地址,无法上传地址的二维码图片供您核对\n\n"
-        "THTXffejAMtqzYKW6Sxfmq8BXXz9yEHYCQ\n\n"
-        "【THTXffej……z9yEHYCQ】请核对前后八位数字和字母\n\n"
-        "⚠️上述地址前5位为 THTXf，后5位为 EHYCQ\n如不一致则意味着您使用了盗版客户端，请停止充值\n\n"
-        "💬 如不确定,切勿提币,请联系在线客服核验! "
-    )
-
-    try:
-        await update.message.reply_photo(
-            photo=WELCOME_IMG_ID,
-            caption=caption,
-            reply_markup=reply_markup
-        )
-    except Exception as e:
-        logging.error(f"发送欢迎图片失败: {e}")
-        await update.message.reply_text("欢迎信息发送失败，请联系 @CCXR2025")
-
+    await update.message.reply_text("机器人在线，欢迎使用！")
+    logging.info("发送了测试文本回复")
 
 # 用户点击按钮的处理函数
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
