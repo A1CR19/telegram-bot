@@ -1,7 +1,7 @@
+# bot.py
 import os
 import logging
 import asyncio
-
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -13,7 +13,7 @@ from telegram.ext import (
 from aiohttp import web
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
-HOST = os.environ.get("HOST", "your-render-url.onrender.com")
+HOST = os.environ.get("HOST", "your-bot-name.onrender.com")
 PORT = int(os.environ.get("PORT", 10000))
 
 logging.basicConfig(
@@ -22,21 +22,12 @@ logging.basicConfig(
 )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        await update.message.reply_text("机器人已启动，欢迎使用！")
-        logging.info(f"向用户{update.effective_user.id}发送欢迎消息成功")
-    except Exception as e:
-        logging.error(f"发送欢迎消息异常: {e}")
+    await update.message.reply_text("你好！我是机器人，欢迎使用！")
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    user_id = update.effective_user.id
-    logging.info(f"收到消息：'{text}'，来自用户：{user_id}")
-    try:
-        await update.message.reply_text("收到你的消息啦！")
-        logging.info(f"成功回复用户{user_id}")
-    except Exception as e:
-        logging.error(f"回复消息异常: {e}")
+    logging.info(f"收到消息：{text}，来自用户：{update.effective_user.id}")
+    await update.message.reply_text(f"你说的是：{text}")
 
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -45,11 +36,10 @@ async def main():
 
     webhook_url = f"https://{HOST}/{BOT_TOKEN}"
     logging.info(f"设置 webhook 到：{webhook_url}")
-    await app.bot.set_webhook(webhook_url)
-
-    # 初始化和启动app，启动内部任务队列
+    
     await app.initialize()
     await app.start()
+    await app.bot.set_webhook(webhook_url)
 
     async def handle(request):
         update_data = await request.json()
@@ -59,7 +49,7 @@ async def main():
         return web.Response()
 
     aio_app = web.Application()
-    aio_app.router.add_post(f'/{BOT_TOKEN}', handle)
+    aio_app.router.add_post(f"/{BOT_TOKEN}", handle)
 
     runner = web.AppRunner(aio_app)
     await runner.setup()
@@ -67,9 +57,11 @@ async def main():
     await site.start()
 
     logging.info(f"Webhook 正在监听端口 {PORT}")
-    await asyncio.Event().wait()
+    try:
+        await asyncio.Event().wait()
+    finally:
+        await app.stop()
+        await app.shutdown()
 
-    # 结束时关闭
-    await app.stop()
-    await app.shutdown()
-
+if __name__ == '__main__':
+    asyncio.run(main())
