@@ -10,25 +10,23 @@ from telegram.ext import (
     filters,
 )
 
-# 从 Render 环境变量获取
+# 从环境变量读取
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-PORT = int(os.environ.get("PORT", 8443))
+PORT = int(os.environ.get("PORT", "8443"))
 HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
-# 启用日志输出
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
-# 图片 file_id
 WELCOME_IMG_ID = 'AgACAgUAAxkBAAO8aHPb9LaHZMmcavjuu6EXFHU-qogAAizGMRsZdaFXgCu7IDiL-lgBAAMCAAN5AAM2BA'
 CARD_100_IMG_ID = 'AgACAgUAAxkBAAO_aHPcnUS1CHeXx8e-9rlb7SP-3XIAAi7GMRsZdaFX_JzJmMhQjMMBAAMCAAN4AAM2BA'
 CARD_300_IMG_ID = CARD_100_IMG_ID
 ORDER_IMG_ID = CARD_100_IMG_ID
 CUSTOMER_IMG_ID = 'AgACAgUAAxkBAAO-aHPch23_KXidl0oO_9bB5GbKtP4AAi3GMRsZdaFXyh1ozndYFOEBAAMCAAN4AAM2BA'
 
-# /start 欢迎命令
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name = update.message.from_user.first_name or "朋友"
     keyboard = [
@@ -53,7 +51,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-# 用户点击按钮后的响应
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
@@ -84,25 +82,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("请点击下方菜单按钮选择服务 👇")
 
-# 主函数：使用 webhook
+
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    await app.initialize()
-    await app.start_webhook(
+    await app.run_webhook(
         listen="0.0.0.0",
         port=PORT,
-        webhook_url=f"https://{HOST}/{BOT_TOKEN}"
+        webhook_url=f"https://{HOST}/{BOT_TOKEN}",
+        allowed_updates=["message", "edited_message"],
     )
-    print("Bot webhook started")
-    # 阻塞，直到收到停止信号
-    await asyncio.Future()
 
-    # 关闭流程
-    await app.stop()
-    await app.shutdown()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
