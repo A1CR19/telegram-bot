@@ -28,11 +28,11 @@ CUSTOMER_IMG_ID = 'AgACAgUAAxkBAAO-aHPch23_KXidl0oO_9bB5GbKtP4AAi3GMRsZdaFXyh1oz
 # 商品单价表（单位：元/张）
 PRODUCTS = {
     "油卡": 830,
-    "电信卡": 200,
-    "京东E卡": 320
+    "电信卡": 88,
+    "京东E卡": 815
 }
 
-# 汇率（假设 1 USDT = 7.2 元，实际根据情况调整）
+# 汇率（假设 1 USDT = 7.15 元，实际根据情况调整）
 USDT_RATE = 7.15
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -68,6 +68,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # 处理消息
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
+    logging.info(f"收到消息文本: {text}")
+
     if text.startswith("🛒"):
         try:
             parts = text.replace("🛒", "").replace("张", "").split("*")
@@ -76,7 +78,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             price = PRODUCTS.get(card_type)
             if price:
                 total = price * quantity
-                usdt = round(total / USDT_RATE, 2)
+                usdt = round(total / USDT_RATE)
                 caption = (
                     f"单价：{price}元/张\n"
                     f"数量：{quantity}张\n"
@@ -127,8 +129,9 @@ async def main():
 
     # aiohttp Web 应用
     async def handle(request):
-        update = await request.json()
-        await app.update_queue.put(Update.de_json(update, app.bot))
+        data = await request.json()
+        logging.info(f"收到Webhook更新: {data}")
+        await app.update_queue.put(Update.de_json(data, app.bot))
         return web.Response()
 
     aio_app = web.Application()
