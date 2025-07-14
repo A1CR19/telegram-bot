@@ -103,7 +103,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "🗣 审核通过后，Bot 会通知您\n"
                 "⏳ 请耐心等待...…"
             )
-            await update.message.reply_photo(photo=CUSTOMER_IMG_ID, caption=caption)
+            await update.message.reply_photo(photo=TQKM_IMG_ID, caption=caption)
         else:
             await update.message.reply_text("📌 请点击下方菜单按钮选择服务 👇")
     except Exception as e:
