@@ -47,6 +47,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("🤖 系统异常，请稍后再试")
 
+
+# ==== 错误处理函数 ====
+async def error_handler(update, context):
+    logger.error(f"未捕获异常: {context.error}\n{traceback.format_exc()}")
+    if update and update.message:
+        await update.message.reply_text("⚠️ 系统故障，请稍后再试")
+
 # 替换 main 函数部分
 
 async def main():
