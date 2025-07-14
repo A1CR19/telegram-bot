@@ -13,7 +13,7 @@ from aiohttp import web
 
 # ==== 环境变量配置 ====
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-HOST = "telegram-bot-28w5.onrender.com"  # 你的 Render 子域名
+HOST = os.getenv("HOST")  # 你的 Render 子域名，比如 telegram-bot-28w5.onrender.com
 PORT = int(os.getenv("PORT", "10000"))
 
 if not BOT_TOKEN or not HOST:
@@ -110,7 +110,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ==== 错误处理函数 ====
-async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def error_handler(update: Update, context):
     logger.error(f"未捕获异常: {context.error}", exc_info=True)
     if update and update.message:
         await update.message.reply_text("⚠️ 系统故障，请稍后再试")
@@ -128,14 +128,15 @@ async def main():
     await application.bot.set_webhook(webhook_url)
     logger.info(f"Webhook 设置成功：{webhook_url}")
 
-    # aiohttp 服务处理 Telegram 的 webhook 请求
+    # aiohttp 服务接收 webhook 更新
     async def handle(request):
         try:
             update_data = await request.json()
+            logger.info(f"Webhook 收到更新: {update_data}")  # 重要日志，确认接收
             await application.update_queue.put(Update.de_json(update_data, application.bot))
             return web.Response(text="ok")
         except Exception as e:
-            logger.error(f"Webhook 处理请求异常: {e}", exc_info=True)
+            logger.error(f"Webhook 处理异常: {e}", exc_info=True)
             return web.Response(status=500, text="error")
 
     aio_app = web.Application()
@@ -149,11 +150,11 @@ async def main():
 
     logger.info(f"Bot 已上线，监听端口: {PORT}")
 
-    # 启动 PTB 应用（但不再使用 .start_webhook()）
+    # 初始化并启动应用（不调用 start_webhook，避免冲突）
     await application.initialize()
     await application.start()
 
-    # 保持运行
+    # 持续运行防止退出
     await asyncio.Event().wait()
 
 
