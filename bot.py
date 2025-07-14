@@ -152,7 +152,7 @@ async def main():
     # 关键：启动 PTB 消费队列的后台任务
     await application.initialize()
     await application.start()
-    await application.updater.start_polling()  # **此处非常关键，否则 update_queue 无人消费**
+    await application.updater.start_webhook() # ✅ 使用 webhook 消费消息队列
 
     # 持续等待，防止程序退出
     await asyncio.Event().wait()
