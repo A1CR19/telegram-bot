@@ -34,7 +34,7 @@ keyboard = ReplyKeyboardMarkup(
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = "欢迎使用自助系统，请选择以下操作："
     await update.message.reply_photo(
-        photo="<你的欢迎图片 file_id>",
+        photo="AgACAgUAAxkBAAMJaHPV1eyQ8z_fVK7Yt3k85VxNgTEAAizGMRsZdaFXfuNLuN-INr8BAAMCAAN5AAM2BA",
         caption=welcome_text,
         reply_markup=keyboard
     )
@@ -44,7 +44,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user_text == "购买卡类商品":
         await update.message.reply_photo(
-            photo="<商品图片 file_id>",
+            photo="AgACAgUAAxkBAAMKaHPV8I7h3xAl2HiT5-KytQJXhwADLcYxGxl1oVcJZsMDFqMUAQEAAwIAA3gAAzYE",
             caption="🔥 特价商品：Netflix 会员卡，仅需 5 USDT",
         )
     elif user_text == "联系客服":
