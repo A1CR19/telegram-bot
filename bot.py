@@ -91,11 +91,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "💼 收款地址(USDT-TRC20)：\n\n"
                 "THTXffejAMtqzYKW6Sxfmq8BXXz9yEHYCQ\n\n"
                 "👆 点击复制钱包, 地址尾号 EHYCQ 👆\n\n"
-                "- 提币后请点击“提取卡密”按钮获取卡密"
+                "- 提示："
+                "- 对上述地址👆交易所或钱包提币会有1-3分钟确认期，请等待确认提币成功后点击（提取卡密） 后 Bot 会为您发送个人提卡密令，请妥善保管好，请勿与他人分享！\n"
+                "- 请耐心等待，密令激活成功后 Bot 会通立即发送您的对应卡号卡密！"
             )
             await update.message.reply_photo(photo=CARD_IMG_ID, caption=caption, parse_mode="Markdown")
         elif text == "💬 在线客服":
-            await update.message.reply_photo(photo=CUSTOMER_IMG_ID, caption="👩‍💻 联系客服 @CCXR2025")
+            caption = (
+                "👩‍💻 中油国际客服 @CCXR2025"\n\n"
+                "🌐 🌐 🌐 🌐 🌐 🌐 🌐\n"
+                "🗣 在线时间上午10点~晚上12点\n"
+            )
+            await update.message.reply_photo(photo=CUSTOMER_IMG_ID, caption=caption)
         elif text == "📦 提取卡密":
             caption = (
                 "✅ 请向我发送您的交易截图进行审核\n"
