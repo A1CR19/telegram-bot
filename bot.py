@@ -98,7 +98,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_photo(photo=CARD_IMG_ID, caption=caption, parse_mode="Markdown")
         elif text == "💬 在线客服":
             caption = (
-                "👩‍💻 中油国际客服 @CCXR2025"\n\n"
+                "👩‍💻 中油国际客服 @CCXR2025\n\n"
                 "🌐 🌐 🌐 🌐 🌐 🌐 🌐\n"
                 "🗣 在线时间上午10点~晚上12点\n"
             )
